@@ -34,6 +34,9 @@ public class User {
     @Column(name = "viewed_video")
     private boolean viewedVideo;
 
+    @Column(name = "category")
+    private String category;
+
     @Column(name = "video_counter")
     private Integer videoCounter;
 }
