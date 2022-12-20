@@ -13,7 +13,11 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -25,6 +29,8 @@ public class MVPBot extends TelegramLongPollingBot {
     private final UserRepository userRepository;
 
     boolean startWait;
+
+    boolean anotherCountry;
 
     User user = new User();
 
@@ -47,6 +53,37 @@ public class MVPBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
         if (update.hasMessage() && update.getMessage().getText().equals("/start") && update.getMessage().hasText() && startWait == false) {
+
+            InlineKeyboardMarkup replyKeyboardMarkup = new InlineKeyboardMarkup();
+            InlineKeyboardButton iCome;
+            List<InlineKeyboardButton> inlineKeyboardButtons = new ArrayList<>();
+
+            iCome = InlineKeyboardButton.builder()
+                    .text("Я иду")
+                    .callbackData("Я иду")
+                    .build();
+
+            inlineKeyboardButtons.add(iCome);
+            replyKeyboardMarkup.setKeyboard(List.of(inlineKeyboardButtons));
+            SendMessage sendMessage = SendMessage
+                    .builder()
+                    .chatId(update.getMessage().getChatId())
+                    .text(String.format("ПРОЖИВИ%n" +
+                            "ОТПУСТИ%n" +
+                            "ВЫЙДИ НА НОВЫЙ УРОВНЬ%n" +
+                            "ЧЕРЕЗ  ДВИЖЕНИЕ И СОЗНАНИЕ✨"))
+                    .replyMarkup(replyKeyboardMarkup)
+                    .build();
+
+            try {
+                execute(sendMessage);
+            } catch (TelegramApiException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
+        else if(update.hasCallbackQuery() && update.getCallbackQuery().getData().equals("Я иду")){
+            InlineKeyboardMarkup replyKeyboardMarkup = new InlineKeyboardMarkup();
             User newUser = new User();
             List<User> allUsers = userRepository.findAll();
             List<Long> allChatIds = new ArrayList<>();
@@ -54,11 +91,12 @@ public class MVPBot extends TelegramLongPollingBot {
                 allChatIds.add(tmp.getChatId());
             }
 
-            if (!allChatIds.contains(update.getMessage().getChatId())) {
-                newUser.setChatId(update.getMessage().getChatId());
+            if (!allChatIds.contains(update.getCallbackQuery().getMessage().getChatId())) {
+                newUser.setChatId(update.getCallbackQuery().getMessage().getChatId());
                 newUser.setState("none");
                 newUser.setStartWait(false);
                 newUser.setViewedVideo(false);
+                newUser.setRegistrationDate(LocalDateTime.now());
                 userRepository.save(newUser);
             }
 
@@ -67,50 +105,46 @@ public class MVPBot extends TelegramLongPollingBot {
             InlineKeyboardButton button3;
             InlineKeyboardButton button4;
 
-            InlineKeyboardMarkup replyKeyboardMarkup = new InlineKeyboardMarkup();
+
 
             List<InlineKeyboardButton> inlineKeyboardButtonsRow1 = new ArrayList<>();
             List<InlineKeyboardButton> inlineKeyboardButtonsRow2 = new ArrayList<>();
+            List<InlineKeyboardButton> inlineKeyboardButtonsRow3 = new ArrayList<>();
+            List<InlineKeyboardButton> inlineKeyboardButtonsRow4 = new ArrayList<>();
             button1 = InlineKeyboardButton.builder()
-                    .text("Категория 1")
+                    .text("Нет денег -> изобилие")
                     .callbackData("Category1")
                     .build();
 
             button2 = InlineKeyboardButton.builder()
-                    .text("Категория 2")
+                    .text("Одиночество -> любовь")
                     .callbackData("Category2")
                     .build();
 
             button3 = InlineKeyboardButton.builder()
-                    .text("Категория 3")
+                    .text("Тревога -> спокойствие")
                     .callbackData("Category3")
                     .build();
 
             button4 = InlineKeyboardButton.builder()
-                    .text("Категория 4")
+                    .text("Страх -> проявленность")
                     .callbackData("Category4")
                     .build();
 
             inlineKeyboardButtonsRow1.add(button1);
-            inlineKeyboardButtonsRow1.add(button2);
-            inlineKeyboardButtonsRow2.add(button3);
-            inlineKeyboardButtonsRow2.add(button4);
-            replyKeyboardMarkup.setKeyboard(List.of(inlineKeyboardButtonsRow1, inlineKeyboardButtonsRow2));
-
-            SendMessage sendMessage = SendMessage.builder()
-                    .chatId(update.getMessage().getChatId())
-                    .text("Приветствие и о чём продукт")
-                    .build();
+            inlineKeyboardButtonsRow2.add(button2);
+            inlineKeyboardButtonsRow3.add(button3);
+            inlineKeyboardButtonsRow4.add(button4);
+            replyKeyboardMarkup.setKeyboard(List.of(inlineKeyboardButtonsRow1, inlineKeyboardButtonsRow2, inlineKeyboardButtonsRow3, inlineKeyboardButtonsRow4));
 
 
             SendMessage sendMessageAboutProduct = SendMessage
                     .builder()
-                    .chatId(update.getMessage().getChatId())
-                    .text(String.format("Выбери то, что волнует сейчас больше всего?%nЯ хочу перейти …."))
+                    .chatId(update.getCallbackQuery().getMessage().getChatId())
+                    .text(String.format("Выбери то, что волнует сейчас больше всего?%nЯ хочу перейти из ..."))
                     .replyMarkup(replyKeyboardMarkup)
                     .build();
             try {
-                execute(sendMessage);
                 execute(sendMessageAboutProduct);
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
@@ -118,6 +152,7 @@ public class MVPBot extends TelegramLongPollingBot {
         } else if (update.hasCallbackQuery() && update.getCallbackQuery().getData().equals("Category1")) {
             user = userRepository.findByChatId(update.getCallbackQuery().getMessage().getChatId());
             user.setCategory("category1");
+            user.setRegistrationDate(LocalDateTime.now());
             userRepository.save(user);
             InlineKeyboardButton button1;
             InlineKeyboardButton button2;
@@ -150,7 +185,238 @@ public class MVPBot extends TelegramLongPollingBot {
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
-        } else if (update.hasCallbackQuery() && update.getCallbackQuery().getData().equals("Карта для РФ Category1") && startWait == false) {
+        }
+        else if (update.hasCallbackQuery() && update.getCallbackQuery().getData().equals("ПЛАТИ Category1") && startWait == false){
+            user = userRepository.findByChatId(update.getCallbackQuery().getMessage().getChatId());
+            SendMessage sendMessage = SendMessage
+                    .builder()
+                    .chatId(update.getCallbackQuery().getMessage().getChatId())
+                    .text(String.format("Zirat TR86 0001 0090 1015 8920 7050 01%n" +
+                            "Стоимость 555 Tl%n" +
+                            "Toncoin UQClPe72ZZb-VbOtdbMREpjVjpsjONCHEElpC3psp62KrUqc%n" +
+                            "Стоимость 14,3 Toncoin%n%n" +
+                            "Введите имя пользователя, от которого поступит платёж"))
+                    .build();
+            anotherCountry = true;
+            try {
+                execute(sendMessage);
+            } catch (TelegramApiException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        else if (update.hasCallbackQuery() && update.getCallbackQuery().getData().equals("ПЛАТИ Category2") && startWait == false){
+            user = userRepository.findByChatId(update.getCallbackQuery().getMessage().getChatId());
+            SendMessage sendMessage = SendMessage
+                    .builder()
+                    .chatId(update.getCallbackQuery().getMessage().getChatId())
+                    .text(String.format("Zirat TR86 0001 0090 1015 8920 7050 01%n" +
+                            "Стоимость 555 Tl%n" +
+                            "Toncoin UQClPe72ZZb-VbOtdbMREpjVjpsjONCHEElpC3psp62KrUqc%n" +
+                            "Стоимость 14,3 Toncoin%n%n" +
+                            "Введите имя пользователя, от которого поступит платёж"))
+                    .build();
+            anotherCountry = true;
+            try {
+                execute(sendMessage);
+            } catch (TelegramApiException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        else if (update.hasCallbackQuery() && update.getCallbackQuery().getData().equals("ПЛАТИ Category3") && startWait == false){
+            user = userRepository.findByChatId(update.getCallbackQuery().getMessage().getChatId());
+            SendMessage sendMessage = SendMessage
+                    .builder()
+                    .chatId(update.getCallbackQuery().getMessage().getChatId())
+                    .text(String.format("Zirat TR86 0001 0090 1015 8920 7050 01%n" +
+                            "Стоимость 555 Tl%n" +
+                            "Toncoin UQClPe72ZZb-VbOtdbMREpjVjpsjONCHEElpC3psp62KrUqc%n" +
+                            "Стоимость 14,3 Toncoin%n%n" +
+                            "Введите имя пользователя, от которого поступит платёж"))
+                    .build();
+            anotherCountry = true;
+            try {
+                execute(sendMessage);
+            } catch (TelegramApiException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        else if (update.hasCallbackQuery() && update.getCallbackQuery().getData().equals("ПЛАТИ Category4") && startWait == false){
+            user = userRepository.findByChatId(update.getCallbackQuery().getMessage().getChatId());
+            SendMessage sendMessage = SendMessage
+                    .builder()
+                    .chatId(update.getCallbackQuery().getMessage().getChatId())
+                    .text(String.format("Zirat TR86 0001 0090 1015 8920 7050 01%n" +
+                            "Стоимость 555 Tl%n" +
+                            "Toncoin UQClPe72ZZb-VbOtdbMREpjVjpsjONCHEElpC3psp62KrUqc%n" +
+                            "Стоимость 14,3 Toncoin%n%n" +
+                            "Введите имя пользователя, от которого поступит платёж"))
+                    .build();
+            anotherCountry = true;
+            try {
+                execute(sendMessage);
+            } catch (TelegramApiException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        else if (update.hasMessage() && update.getMessage().hasText() &&  anotherCountry == true){
+            user = userRepository.findByChatId(update.getMessage().getChatId());
+            if (user.getCategory().equals("category1")) {
+                InlineKeyboardButton button1 = InlineKeyboardButton.builder()
+                        .text("Подтверждение оплаты")
+                        .callbackData("Подтверждение оплаты Category1")
+                        .build();
+                InlineKeyboardMarkup replyKeyboardMarkup = new InlineKeyboardMarkup();
+
+                List<InlineKeyboardButton> inlineKeyboardButtons = new ArrayList<>();
+
+                inlineKeyboardButtons.add(button1);
+
+                replyKeyboardMarkup.setKeyboard(Collections.singletonList(inlineKeyboardButtons));
+
+
+                user.setName(update.getMessage().getText());
+                userRepository.save(user);
+
+                SendMessage sendMessagePr1 = SendMessage.builder()
+                        .chatId(update.getMessage().getChatId())
+                        .text(String.format("После перевода денег нажмите кнопку \"Подтверждение оплаты\" %n" +
+                                "После подтверждения оплаты от менеджера вам придёт уведомление и вы сможете продолжить"))
+                        .replyMarkup(replyKeyboardMarkup)
+                        .build();
+
+
+                SendMessage sendMessage = SendMessage
+                        .builder()
+                        .text("Имя и фамилия для карты, которые вы ввели: " + update.getMessage().getText())
+                        .chatId(update.getMessage().getChatId())
+                        .build();
+                try {
+                    execute(sendMessage);
+                    execute(sendMessagePr1);
+                } catch (TelegramApiException e) {
+                    throw new RuntimeException(e);
+                }
+                startWait = false;
+            } else if (user.getCategory().equals("category2")) {
+
+                InlineKeyboardButton button1 = InlineKeyboardButton.builder()
+                        .text("Подтверждение оплаты")
+                        .callbackData("Подтверждение оплаты Category2")
+                        .build();
+                InlineKeyboardMarkup replyKeyboardMarkup = new InlineKeyboardMarkup();
+
+                List<InlineKeyboardButton> inlineKeyboardButtons = new ArrayList<>();
+
+                inlineKeyboardButtons.add(button1);
+
+                replyKeyboardMarkup.setKeyboard(Collections.singletonList(inlineKeyboardButtons));
+
+
+                user.setName(update.getMessage().getText());
+                userRepository.save(user);
+
+                SendMessage sendMessagePr1 = SendMessage.builder()
+                        .chatId(update.getMessage().getChatId())
+                        .text(String.format("После перевода денег нажмите кнопку \"Подтверждение оплаты\" %n" +
+                                "После подтверждения оплаты от менеджера вам придёт уведомление и вы сможете продолжить"))
+                        .replyMarkup(replyKeyboardMarkup)
+                        .build();
+
+
+                SendMessage sendMessage = SendMessage
+                        .builder()
+                        .text("Имя и фамилия для карты, которые вы ввели: " + update.getMessage().getText())
+                        .chatId(update.getMessage().getChatId())
+                        .build();
+                try {
+                    execute(sendMessage);
+                    execute(sendMessagePr1);
+                } catch (TelegramApiException e) {
+                    throw new RuntimeException(e);
+                }
+                startWait = false;
+            } else if (user.getCategory().equals("category3")) {
+
+                InlineKeyboardButton button1 = InlineKeyboardButton.builder()
+                        .text("Подтверждение оплаты")
+                        .callbackData("Подтверждение оплаты Category3")
+                        .build();
+                InlineKeyboardMarkup replyKeyboardMarkup = new InlineKeyboardMarkup();
+
+                List<InlineKeyboardButton> inlineKeyboardButtons = new ArrayList<>();
+
+                inlineKeyboardButtons.add(button1);
+
+                replyKeyboardMarkup.setKeyboard(Collections.singletonList(inlineKeyboardButtons));
+
+
+                user.setName(update.getMessage().getText());
+                userRepository.save(user);
+
+                SendMessage sendMessagePr1 = SendMessage.builder()
+                        .chatId(update.getMessage().getChatId())
+                        .text(String.format("После перевода денег нажмите кнопку \"Подтверждение оплаты\" %n" +
+                                "После подтверждения оплаты от менеджера вам придёт уведомление и вы сможете продолжить"))
+                        .replyMarkup(replyKeyboardMarkup)
+                        .build();
+
+
+                SendMessage sendMessage = SendMessage
+                        .builder()
+                        .text("Имя и фамилия для карты, которые вы ввели: " + update.getMessage().getText())
+                        .chatId(update.getMessage().getChatId())
+                        .build();
+                try {
+                    execute(sendMessage);
+                    execute(sendMessagePr1);
+                } catch (TelegramApiException e) {
+                    throw new RuntimeException(e);
+                }
+                startWait = false;
+            } else if (user.getCategory().equals("category4")) {
+
+                InlineKeyboardButton button1 = InlineKeyboardButton.builder()
+                        .text("Подтверждение оплаты")
+                        .callbackData("Подтверждение оплаты Category4")
+                        .build();
+                InlineKeyboardMarkup replyKeyboardMarkup = new InlineKeyboardMarkup();
+
+                List<InlineKeyboardButton> inlineKeyboardButtons = new ArrayList<>();
+
+                inlineKeyboardButtons.add(button1);
+
+                replyKeyboardMarkup.setKeyboard(Collections.singletonList(inlineKeyboardButtons));
+
+
+                user.setName(update.getMessage().getText());
+                userRepository.save(user);
+
+                SendMessage sendMessagePr1 = SendMessage.builder()
+                        .chatId(update.getMessage().getChatId())
+                        .text(String.format("После перевода денег нажмите кнопку \"Подтверждение оплаты\" %n" +
+                                "После подтверждения оплаты от менеджера вам придёт уведомление и вы сможете продолжить"))
+                        .replyMarkup(replyKeyboardMarkup)
+                        .build();
+
+
+                SendMessage sendMessage = SendMessage
+                        .builder()
+                        .text("Имя и фамилия для карты, которые вы ввели: " + update.getMessage().getText())
+                        .chatId(update.getMessage().getChatId())
+                        .build();
+                try {
+                    execute(sendMessage);
+                    execute(sendMessagePr1);
+                } catch (TelegramApiException e) {
+                    throw new RuntimeException(e);
+                }
+                startWait = false;
+            }
+        }
+        else if (update.hasCallbackQuery() && update.getCallbackQuery().getData().equals("Карта для РФ Category1") && startWait == false) {
 
             User user = new User();
             SendMessage sendMessage = SendMessage
@@ -201,7 +467,7 @@ public class MVPBot extends TelegramLongPollingBot {
 
                 SendMessage sendMessagePr1 = SendMessage.builder()
                         .chatId(update.getMessage().getChatId())
-                        .text(String.format("Перевод должен быть совершён по номеру карты: 1231 1231 1233 1234%n" +
+                        .text(String.format("Перевод должен быть совершён по номеру карты: Сбербанк: 5469380127681624%nТинькоф:%nСтоимость 1999 руб%n " +
                                 "После перевода денег нажмите кнопку \"Подтверждение оплаты\" %n" +
                                 "После подтверждения оплаты от менеджера вам придёт уведомление и вы сможете продолжить"))
                         .replyMarkup(replyKeyboardMarkup)
@@ -240,7 +506,7 @@ public class MVPBot extends TelegramLongPollingBot {
 
                 SendMessage sendMessagePr1 = SendMessage.builder()
                         .chatId(update.getMessage().getChatId())
-                        .text(String.format("Перевод должен быть совершён по номеру карты: 1231 1231 1233 1234%n" +
+                        .text(String.format("Перевод должен быть совершён по номеру карты: Сбербанк: 5469380127681624%nТинькоф:%nСтоимость 1999 руб%n" +
                                 "После перевода денег нажмите кнопку \"Подтверждение оплаты\" %n" +
                                 "После подтверждения оплаты от менеджера вам придёт уведомление и вы сможете продолжить"))
                         .replyMarkup(replyKeyboardMarkup)
@@ -279,7 +545,7 @@ public class MVPBot extends TelegramLongPollingBot {
 
                 SendMessage sendMessagePr1 = SendMessage.builder()
                         .chatId(update.getMessage().getChatId())
-                        .text(String.format("Перевод должен быть совершён по номеру карты: 1231 1231 1233 1234%n" +
+                        .text(String.format("Перевод должен быть совершён по номеру карты: Сбербанк: 5469380127681624%nТинькоф:%nСтоимость 1999 руб%n" +
                                 "После перевода денег нажмите кнопку \"Подтверждение оплаты\" %n" +
                                 "После подтверждения оплаты от менеджера вам придёт уведомление и вы сможете продолжить"))
                         .replyMarkup(replyKeyboardMarkup)
@@ -318,7 +584,7 @@ public class MVPBot extends TelegramLongPollingBot {
 
                 SendMessage sendMessagePr1 = SendMessage.builder()
                         .chatId(update.getMessage().getChatId())
-                        .text(String.format("Перевод должен быть совершён по номеру карты: 1231 1231 1233 1234%n" +
+                        .text(String.format("Перевод должен быть совершён по номеру карты: Сбербанк: 5469380127681624%nТинькоф:%nСтоимость 1999 руб%n" +
                                 "После перевода денег нажмите кнопку \"Подтверждение оплаты\" %n" +
                                 "После подтверждения оплаты от менеджера вам придёт уведомление и вы сможете продолжить"))
                         .replyMarkup(replyKeyboardMarkup)
@@ -380,14 +646,34 @@ public class MVPBot extends TelegramLongPollingBot {
                     .text(String.format("Ссылка на видео в YouTube%n https://youtu.be/CZO1Rx5HUY0"))
                     .chatId(chatId)
                     .build();
-            SendMessage sendMessage1 = SendMessage
-                    .builder()
-                    .text("Послесловие")
-                    .chatId(chatId)
-                    .build();
+
+            Timer t = new Timer(5000, null);
+
+            t.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    SendMessage sendMessage1 = SendMessage
+                            .builder()
+                            .text(String.format("Как всё прошло? Какие ощущения? Проект создан от всего сердца.%n" +
+                                    "Передай самым дорогим людям вход в P O R T A L https://t.me/portalnewlife"))
+                            .chatId(chatId)
+                            .build();
+                    try {
+                        execute(sendMessage1);
+                        userRepository.delete(user);
+                    } catch (TelegramApiException ex) {
+                        throw new RuntimeException(ex);
+                    }
+
+                }
+            });
+
+            t.setRepeats(false);
+            t.setDelay(5000); //5 sec
+            t.start();
             try {
                 execute(sendMessage);
-                execute(sendMessage1);
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
@@ -395,6 +681,7 @@ public class MVPBot extends TelegramLongPollingBot {
         } else if (update.hasCallbackQuery() && update.getCallbackQuery().getData().equals("Category2")) {
             user = userRepository.findByChatId(update.getCallbackQuery().getMessage().getChatId());
             user.setCategory("category2");
+            user.setRegistrationDate(LocalDateTime.now());
             userRepository.save(user);
             InlineKeyboardButton button1;
             InlineKeyboardButton button2;
@@ -498,6 +785,31 @@ public class MVPBot extends TelegramLongPollingBot {
                     .chatId(chatId)
                     .build();
 
+            Timer t = new Timer(5000, null);
+
+            t.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    SendMessage sendMessage1 = SendMessage
+                            .builder()
+                            .text(String.format("Как всё прошло? Какие ощущения? Проект создан от всего сердца.%n" +
+                                    "Передай самым дорогим людям вход в P O R T A L https://t.me/portalnewlife"))
+                            .chatId(chatId)
+                            .build();
+                    try {
+                        execute(sendMessage1);
+                        userRepository.delete(user);
+                    } catch (TelegramApiException ex) {
+                        throw new RuntimeException(ex);
+                    }
+
+                }
+            });
+
+            t.setRepeats(false);
+            t.setDelay(5000); //5 sec
+            t.start();
             try {
                 execute(sendMessage);
             } catch (TelegramApiException e) {
@@ -510,6 +822,7 @@ public class MVPBot extends TelegramLongPollingBot {
         else if (update.hasCallbackQuery() && update.getCallbackQuery().getData().equals("Category3")) {
             user = userRepository.findByChatId(update.getCallbackQuery().getMessage().getChatId());
             user.setCategory("category3");
+            user.setRegistrationDate(LocalDateTime.now());
             userRepository.save(user);
             InlineKeyboardButton button1;
             InlineKeyboardButton button2;
@@ -612,6 +925,31 @@ public class MVPBot extends TelegramLongPollingBot {
                     .chatId(chatId)
                     .build();
 
+            Timer t = new Timer(5000, null);
+
+            t.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    SendMessage sendMessage1 = SendMessage
+                            .builder()
+                            .text(String.format("Как всё прошло? Какие ощущения? Проект создан от всего сердца.%n" +
+                                    "Передай самым дорогим людям вход в P O R T A L https://t.me/portalnewlife"))
+                            .chatId(chatId)
+                            .build();
+                    try {
+                        execute(sendMessage1);
+                        userRepository.delete(user);
+                    } catch (TelegramApiException ex) {
+                        throw new RuntimeException(ex);
+                    }
+
+                }
+            });
+
+            t.setRepeats(false);
+            t.setDelay(5000); //5 sec
+            t.start();
             try {
                 execute(sendMessage);
             } catch (TelegramApiException e) {
@@ -624,6 +962,7 @@ public class MVPBot extends TelegramLongPollingBot {
         else if (update.hasCallbackQuery() && update.getCallbackQuery().getData().equals("Category4")) {
             user = userRepository.findByChatId(update.getCallbackQuery().getMessage().getChatId());
             user.setCategory("category4");
+            user.setRegistrationDate(LocalDateTime.now());
             userRepository.save(user);
             InlineKeyboardButton button1;
             InlineKeyboardButton button2;
@@ -723,10 +1062,35 @@ public class MVPBot extends TelegramLongPollingBot {
             userRepository.save(user);
             SendMessage sendMessage = SendMessage
                     .builder()
-                    .text("Просмотр видео из категории 2")
+                    .text("Просмотр видео из категории 4")
                     .chatId(chatId)
                     .build();
 
+            Timer t = new Timer(5000, null);
+
+            t.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    SendMessage sendMessage1 = SendMessage
+                            .builder()
+                            .text(String.format("Как всё прошло? Какие ощущения? Проект создан от всего сердца.%n" +
+                                    "Передай самым дорогим людям вход в P O R T A L https://t.me/portalnewlife"))
+                            .chatId(chatId)
+                            .build();
+                    try {
+                        execute(sendMessage1);
+                        userRepository.delete(user);
+                    } catch (TelegramApiException ex) {
+                        throw new RuntimeException(ex);
+                    }
+
+                }
+            });
+
+            t.setRepeats(false);
+            t.setDelay(5000); //5 sec
+            t.start();
             try {
                 execute(sendMessage);
             } catch (TelegramApiException e) {

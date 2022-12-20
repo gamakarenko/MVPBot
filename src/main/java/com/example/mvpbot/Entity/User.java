@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
@@ -37,6 +38,9 @@ public class User {
     @Column(name = "category")
     private String category;
 
-    @Column(name = "video_counter")
-    private Integer videoCounter;
+    @Column(name = "registration_time")
+    private LocalDateTime registrationDate;
+
+    @Column(name = "another_country")
+    private String anotherCountry;
 }
