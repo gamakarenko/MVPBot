@@ -7,7 +7,9 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendVideo;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -38,6 +40,7 @@ public class MVPBot extends TelegramLongPollingBot {
     // 356840503 глб
     // лил 5105642633
     private Long adminId = 356840503L;
+    private Long secondAdminId = 413365670L;
     private Long chatId;
 
     @Override
@@ -467,7 +470,7 @@ public class MVPBot extends TelegramLongPollingBot {
 
                 SendMessage sendMessagePr1 = SendMessage.builder()
                         .chatId(update.getMessage().getChatId())
-                        .text(String.format("Перевод должен быть совершён по номеру карты: Сбербанк: 5469380127681624%nТинькоф:%nСтоимость 1999 руб%n " +
+                        .text(String.format("Перевод должен быть совершён по номеру карты:%nСбербанк: 5469 3801 2768 1624%nТинькоф: 5536 9138 2009 6671%nСтоимость 2222 руб%n " +
                                 "После перевода денег нажмите кнопку \"Подтверждение оплаты\" %n" +
                                 "После подтверждения оплаты от менеджера вам придёт уведомление и вы сможете продолжить"))
                         .replyMarkup(replyKeyboardMarkup)
@@ -506,7 +509,7 @@ public class MVPBot extends TelegramLongPollingBot {
 
                 SendMessage sendMessagePr1 = SendMessage.builder()
                         .chatId(update.getMessage().getChatId())
-                        .text(String.format("Перевод должен быть совершён по номеру карты: Сбербанк: 5469380127681624%nТинькоф:%nСтоимость 1999 руб%n" +
+                        .text(String.format("Перевод должен быть совершён по номеру карты:%nСбербанк: 5469 3801 2768 1624%nТинькоф: 5536 9138 2009 6671%nСтоимость 2222 руб%n" +
                                 "После перевода денег нажмите кнопку \"Подтверждение оплаты\" %n" +
                                 "После подтверждения оплаты от менеджера вам придёт уведомление и вы сможете продолжить"))
                         .replyMarkup(replyKeyboardMarkup)
@@ -545,7 +548,7 @@ public class MVPBot extends TelegramLongPollingBot {
 
                 SendMessage sendMessagePr1 = SendMessage.builder()
                         .chatId(update.getMessage().getChatId())
-                        .text(String.format("Перевод должен быть совершён по номеру карты: Сбербанк: 5469380127681624%nТинькоф:%nСтоимость 1999 руб%n" +
+                        .text(String.format("Перевод должен быть совершён по номеру карты:%nСбербанк: 5469 3801 2768 1624%nТинькоф: 5536 9138 2009 6671%nСтоимость 2222 руб%n" +
                                 "После перевода денег нажмите кнопку \"Подтверждение оплаты\" %n" +
                                 "После подтверждения оплаты от менеджера вам придёт уведомление и вы сможете продолжить"))
                         .replyMarkup(replyKeyboardMarkup)
@@ -584,7 +587,7 @@ public class MVPBot extends TelegramLongPollingBot {
 
                 SendMessage sendMessagePr1 = SendMessage.builder()
                         .chatId(update.getMessage().getChatId())
-                        .text(String.format("Перевод должен быть совершён по номеру карты: Сбербанк: 5469380127681624%nТинькоф:%nСтоимость 1999 руб%n" +
+                        .text(String.format("Перевод должен быть совершён по номеру карты:%nСбербанк: 5469 3801 2768 1624%nТинькоф: 5536 9138 2009 6671%nСтоимость 2222 руб%n" +
                                 "После перевода денег нажмите кнопку \"Подтверждение оплаты\" %n" +
                                 "После подтверждения оплаты от менеджера вам придёт уведомление и вы сможете продолжить"))
                         .replyMarkup(replyKeyboardMarkup)
@@ -629,53 +632,95 @@ public class MVPBot extends TelegramLongPollingBot {
                     .text("Пользователь " + user.getName() + " совершил оплату")
                     .chatId(adminId)
                     .build();
+            SendMessage sendMessage2 = SendMessage
+                    .builder()
+                    .replyMarkup(replyKeyboardMarkup)
+                    .text("Пользователь " + user.getName() + " совершил оплату")
+                    .chatId(secondAdminId)
+                    .build();
             try {
                 execute(sendMessage);
+                execute(sendMessage2);
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
         } else if (update.hasCallbackQuery() && update.getCallbackQuery().getData().equals("Подтверждение Category1")) {
 
             user = userRepository.findByChatId(chatId);
-            user.setState("approved");
-            user.setStartWait(false);
-            user.setViewedVideo(false);
-            userRepository.save(user);
-            SendMessage sendMessage = SendMessage
-                    .builder()
-                    .text(String.format("Ссылка на видео в YouTube%n https://youtu.be/CZO1Rx5HUY0"))
-                    .chatId(chatId)
-                    .build();
 
-            Timer t = new Timer(5000, null);
+            if(!user.getState().equals("approved")) {
+                SendMessage sendMessageInfo = SendMessage
+                        .builder()
+                        .text(String.format("Видео будет доступно 30 дней после покупки!%n Возможно, для просмотра видео понадобится включить впн, рекомендуемая страна - Франция"))
+                        .chatId(chatId)
+                        .build();
+                SendMessage sendMessage = SendMessage
+                        .builder()
+                        .text(String.format("Ссылка на видео в YouTube%nhttps://youtu.be/iZ650tzI2nI"))
+                        .chatId(chatId)
+                        .build();
 
-            t.addActionListener(new ActionListener() {
+                user.setState("approved");
+                user.setStartWait(false);
+                user.setViewedVideo(false);
+                userRepository.save(user);
 
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    SendMessage sendMessage1 = SendMessage
-                            .builder()
-                            .text(String.format("Как всё прошло? Какие ощущения? Проект создан от всего сердца.%n" +
-                                    "Передай самым дорогим людям вход в P O R T A L https://t.me/portalnewlife"))
-                            .chatId(chatId)
-                            .build();
-                    try {
-                        execute(sendMessage1);
-                        userRepository.delete(user);
-                    } catch (TelegramApiException ex) {
-                        throw new RuntimeException(ex);
+                Timer timerForMessageAfter = new Timer(5000, null);
+
+                timerForMessageAfter.addActionListener(new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        SendMessage sendMessage1 = SendMessage
+                                .builder()
+                                .text(String.format("Как всё прошло? Какие ощущения? Проект создан от всего сердца.%n" +
+                                        "Передай самым дорогим людям вход в P O R T A L https://t.me/portalnewlife"))
+                                .chatId(chatId)
+                                .build();
+                        try {
+                            execute(sendMessage1);
+                            userRepository.delete(user);
+                        } catch (TelegramApiException ex) {
+                            throw new RuntimeException(ex);
+                        }
+
                     }
+                });
 
+                timerForMessageAfter.setRepeats(false);
+                timerForMessageAfter.setDelay(5000); //5 sec
+                timerForMessageAfter.start();
+                try {
+                    execute(sendMessageInfo);
+                    Message sendedMessage = execute(sendMessage);
+
+                    Timer timerForDeleteMessage = new Timer(120000, null);
+
+                    timerForDeleteMessage.addActionListener(new ActionListener() {
+
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            DeleteMessage deleteMessage = DeleteMessage
+                                    .builder()
+                                    .messageId(sendedMessage.getMessageId())
+                                    .chatId(chatId)
+                                    .build();
+                            try {
+                                execute(deleteMessage);
+                            } catch (TelegramApiException ex) {
+                                throw new RuntimeException(ex);
+                            }
+
+                        }
+                    });
+
+                    timerForDeleteMessage.setRepeats(false);
+                    timerForDeleteMessage.setDelay(120000);
+                    timerForDeleteMessage.start();
+
+                } catch (TelegramApiException e) {
+                    throw new RuntimeException(e);
                 }
-            });
-
-            t.setRepeats(false);
-            t.setDelay(5000); //5 sec
-            t.start();
-            try {
-                execute(sendMessage);
-            } catch (TelegramApiException e) {
-                throw new RuntimeException(e);
             }
             // Пошла категория 2 ------------------------
         } else if (update.hasCallbackQuery() && update.getCallbackQuery().getData().equals("Category2")) {
@@ -768,52 +813,94 @@ public class MVPBot extends TelegramLongPollingBot {
                     .text("Пользователь " + user.getName() + " совершил оплату")
                     .chatId(adminId)
                     .build();
+            SendMessage sendMessage2 = SendMessage
+                    .builder()
+                    .replyMarkup(replyKeyboardMarkup)
+                    .text("Пользователь " + user.getName() + " совершил оплату")
+                    .chatId(secondAdminId)
+                    .build();
             try {
                 execute(sendMessage);
+                execute(sendMessage2);
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
         } else if (update.hasCallbackQuery() && update.getCallbackQuery().getData().equals("Подтверждение Category2")) {
             user = userRepository.findByChatId(chatId);
-            user.setState("approved");
-            user.setStartWait(false);
-            user.setViewedVideo(false);
-            userRepository.save(user);
-            SendMessage sendMessage = SendMessage
-                    .builder()
-                    .text("Просмотр видео из категории 2")
-                    .chatId(chatId)
-                    .build();
+            if (!user.getState().equals("approved")) {
 
-            Timer t = new Timer(5000, null);
+                SendMessage sendMessageInfo = SendMessage
+                        .builder()
+                        .text(String.format("Видео будет доступно 30 дней после покупки!%nВозможно, для просмотра видео понадобится включить впн, рекомендуемая страна - Франция"))
+                        .chatId(chatId)
+                        .build();
+                SendMessage sendMessage = SendMessage
+                        .builder()
+                        .text(String.format("Ссылка на видео в YouTube%nhttps://youtu.be/iZ650tzI2nI"))
+                        .chatId(chatId)
+                        .build();
 
-            t.addActionListener(new ActionListener() {
+                user.setState("approved");
+                user.setStartWait(false);
+                user.setViewedVideo(false);
+                userRepository.save(user);
 
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    SendMessage sendMessage1 = SendMessage
-                            .builder()
-                            .text(String.format("Как всё прошло? Какие ощущения? Проект создан от всего сердца.%n" +
-                                    "Передай самым дорогим людям вход в P O R T A L https://t.me/portalnewlife"))
-                            .chatId(chatId)
-                            .build();
-                    try {
-                        execute(sendMessage1);
-                        userRepository.delete(user);
-                    } catch (TelegramApiException ex) {
-                        throw new RuntimeException(ex);
+                Timer timerForMessageAfter = new Timer(5000, null);
+
+                timerForMessageAfter.addActionListener(new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        SendMessage sendMessage1 = SendMessage
+                                .builder()
+                                .text(String.format("Как всё прошло? Какие ощущения? Проект создан от всего сердца.%n" +
+                                        "Передай самым дорогим людям вход в P O R T A L https://t.me/portalnewlife"))
+                                .chatId(chatId)
+                                .build();
+                        try {
+                            execute(sendMessage1);
+                            userRepository.delete(user);
+                        } catch (TelegramApiException ex) {
+                            throw new RuntimeException(ex);
+                        }
+
                     }
+                });
 
+                timerForMessageAfter.setRepeats(false);
+                timerForMessageAfter.setDelay(5000); //5 sec
+                timerForMessageAfter.start();
+                try {
+                    execute(sendMessageInfo);
+                    Message sendedMessage = execute(sendMessage);
+
+                    Timer timerForDeleteMessage = new Timer(120000, null);
+
+                    timerForDeleteMessage.addActionListener(new ActionListener() {
+
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            DeleteMessage deleteMessage = DeleteMessage
+                                    .builder()
+                                    .messageId(sendedMessage.getMessageId())
+                                    .chatId(chatId)
+                                    .build();
+                            try {
+                                execute(deleteMessage);
+                            } catch (TelegramApiException ex) {
+                                throw new RuntimeException(ex);
+                            }
+
+                        }
+                    });
+
+                    timerForDeleteMessage.setRepeats(false);
+                    timerForDeleteMessage.setDelay(120000); //5 sec
+                    timerForDeleteMessage.start();
+
+                } catch (TelegramApiException e) {
+                    throw new RuntimeException(e);
                 }
-            });
-
-            t.setRepeats(false);
-            t.setDelay(5000); //5 sec
-            t.start();
-            try {
-                execute(sendMessage);
-            } catch (TelegramApiException e) {
-                throw new RuntimeException(e);
             }
         }
 
@@ -908,52 +995,93 @@ public class MVPBot extends TelegramLongPollingBot {
                     .text("Пользователь " + user.getName() + " совершил оплату")
                     .chatId(adminId)
                     .build();
+            SendMessage sendMessage2 = SendMessage
+                    .builder()
+                    .replyMarkup(replyKeyboardMarkup)
+                    .text("Пользователь " + user.getName() + " совершил оплату")
+                    .chatId(secondAdminId)
+                    .build();
             try {
                 execute(sendMessage);
+                execute(sendMessage2);
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
         } else if (update.hasCallbackQuery() && update.getCallbackQuery().getData().equals("Подтверждение Category3")) {
             user = userRepository.findByChatId(chatId);
-            user.setState("approved");
-            user.setStartWait(false);
-            user.setViewedVideo(false);
-            userRepository.save(user);
-            SendMessage sendMessage = SendMessage
-                    .builder()
-                    .text("Просмотр видео из категории 3")
-                    .chatId(chatId)
-                    .build();
+            if (!user.getState().equals("approved")) {
 
-            Timer t = new Timer(5000, null);
+                SendMessage sendMessageInfo = SendMessage
+                        .builder()
+                        .text(String.format("Видео будет доступно 30 дней после покупки!%nВозможно, для просмотра видео понадобится включить впн, рекомендуемая страна - Франция"))
+                        .chatId(chatId)
+                        .build();
+                SendMessage sendMessage = SendMessage
+                        .builder()
+                        .text(String.format("Ссылка на видео в YouTube%nhttps://youtu.be/icr_THOz3Vk"))
+                        .chatId(chatId)
+                        .build();
 
-            t.addActionListener(new ActionListener() {
+                user.setState("approved");
+                user.setStartWait(false);
+                user.setViewedVideo(false);
+                userRepository.save(user);
 
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    SendMessage sendMessage1 = SendMessage
-                            .builder()
-                            .text(String.format("Как всё прошло? Какие ощущения? Проект создан от всего сердца.%n" +
-                                    "Передай самым дорогим людям вход в P O R T A L https://t.me/portalnewlife"))
-                            .chatId(chatId)
-                            .build();
-                    try {
-                        execute(sendMessage1);
-                        userRepository.delete(user);
-                    } catch (TelegramApiException ex) {
-                        throw new RuntimeException(ex);
+                Timer t = new Timer(5000, null);
+
+                t.addActionListener(new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        SendMessage sendMessage1 = SendMessage
+                                .builder()
+                                .text(String.format("Как всё прошло? Какие ощущения? Проект создан от всего сердца.%n" +
+                                        "Передай самым дорогим людям вход в P O R T A L https://t.me/portalnewlife"))
+                                .chatId(chatId)
+                                .build();
+                        try {
+                            execute(sendMessage1);
+                            userRepository.delete(user);
+                        } catch (TelegramApiException ex) {
+                            throw new RuntimeException(ex);
+                        }
+
                     }
+                });
 
+                t.setRepeats(false);
+                t.setDelay(5000); //5 sec
+                t.start();
+                try {
+                    execute(sendMessageInfo);
+                    Message sendedMessage = execute(sendMessage);
+
+                    Timer timerForDeleteMessage = new Timer(120000, null);
+
+                    timerForDeleteMessage.addActionListener(new ActionListener() {
+
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            DeleteMessage deleteMessage = DeleteMessage
+                                    .builder()
+                                    .messageId(sendedMessage.getMessageId())
+                                    .chatId(chatId)
+                                    .build();
+                            try {
+                                execute(deleteMessage);
+                            } catch (TelegramApiException ex) {
+                                throw new RuntimeException(ex);
+                            }
+
+                        }
+                    });
+
+                    timerForDeleteMessage.setRepeats(false);
+                    timerForDeleteMessage.setDelay(120000);
+                    timerForDeleteMessage.start();
+                } catch (TelegramApiException e) {
+                    throw new RuntimeException(e);
                 }
-            });
-
-            t.setRepeats(false);
-            t.setDelay(5000); //5 sec
-            t.start();
-            try {
-                execute(sendMessage);
-            } catch (TelegramApiException e) {
-                throw new RuntimeException(e);
             }
         }
         // Четвертая категория -------------------------
@@ -1049,52 +1177,93 @@ public class MVPBot extends TelegramLongPollingBot {
                     .text("Пользователь " + user.getName() + " совершил оплату")
                     .chatId(adminId)
                     .build();
+            SendMessage sendMessage2 = SendMessage
+                    .builder()
+                    .replyMarkup(replyKeyboardMarkup)
+                    .text("Пользователь " + user.getName() + " совершил оплату")
+                    .chatId(secondAdminId)
+                    .build();
             try {
                 execute(sendMessage);
+                execute(sendMessage2);
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
         } else if (update.hasCallbackQuery() && update.getCallbackQuery().getData().equals("Подтверждение Category4")) {
             user = userRepository.findByChatId(chatId);
-            user.setState("approved");
-            user.setStartWait(false);
-            user.setViewedVideo(false);
-            userRepository.save(user);
-            SendMessage sendMessage = SendMessage
-                    .builder()
-                    .text("Просмотр видео из категории 4")
-                    .chatId(chatId)
-                    .build();
+            if (!user.getState().equals("approved")) {
 
-            Timer t = new Timer(5000, null);
+                SendMessage sendMessageInfo = SendMessage
+                        .builder()
+                        .text(String.format("Видео будет доступно 30 дней после покупки!%nВозможно, для просмотра видео понадобится включить впн, рекомендуемая страна - Франция"))
+                        .chatId(chatId)
+                        .build();
+                SendMessage sendMessage = SendMessage
+                        .builder()
+                        .text(String.format("Ссылка на видео в YouTube%nhttps://youtu.be/qXXgVOmXT1Y"))
+                        .chatId(chatId)
+                        .build();
 
-            t.addActionListener(new ActionListener() {
+                user.setState("approved");
+                user.setStartWait(false);
+                user.setViewedVideo(false);
+                userRepository.save(user);
 
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    SendMessage sendMessage1 = SendMessage
-                            .builder()
-                            .text(String.format("Как всё прошло? Какие ощущения? Проект создан от всего сердца.%n" +
-                                    "Передай самым дорогим людям вход в P O R T A L https://t.me/portalnewlife"))
-                            .chatId(chatId)
-                            .build();
-                    try {
-                        execute(sendMessage1);
-                        userRepository.delete(user);
-                    } catch (TelegramApiException ex) {
-                        throw new RuntimeException(ex);
+                Timer t = new Timer(5000, null);
+
+                t.addActionListener(new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        SendMessage sendMessage1 = SendMessage
+                                .builder()
+                                .text(String.format("Как всё прошло? Какие ощущения? Проект создан от всего сердца.%n" +
+                                        "Передай самым дорогим людям вход в P O R T A L https://t.me/portalnewlife"))
+                                .chatId(chatId)
+                                .build();
+                        try {
+                            execute(sendMessage1);
+                            userRepository.delete(user);
+                        } catch (TelegramApiException ex) {
+                            throw new RuntimeException(ex);
+                        }
+
                     }
+                });
 
+                t.setRepeats(false);
+                t.setDelay(5000); //5 sec
+                t.start();
+                try {
+                    execute(sendMessageInfo);
+                    Message sendedMessage = execute(sendMessage);
+
+                    Timer timerForDeleteMessage = new Timer(120000, null);
+
+                    timerForDeleteMessage.addActionListener(new ActionListener() {
+
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            DeleteMessage deleteMessage = DeleteMessage
+                                    .builder()
+                                    .messageId(sendedMessage.getMessageId())
+                                    .chatId(chatId)
+                                    .build();
+                            try {
+                                execute(deleteMessage);
+                            } catch (TelegramApiException ex) {
+                                throw new RuntimeException(ex);
+                            }
+
+                        }
+                    });
+
+                    timerForDeleteMessage.setRepeats(false);
+                    timerForDeleteMessage.setDelay(120000); //5 sec
+                    timerForDeleteMessage.start();
+                } catch (TelegramApiException e) {
+                    throw new RuntimeException(e);
                 }
-            });
-
-            t.setRepeats(false);
-            t.setDelay(5000); //5 sec
-            t.start();
-            try {
-                execute(sendMessage);
-            } catch (TelegramApiException e) {
-                throw new RuntimeException(e);
             }
         }
     }
